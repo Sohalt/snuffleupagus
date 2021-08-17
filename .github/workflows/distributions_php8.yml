@@ -30,3 +30,29 @@ jobs:
         run: |
           grep -r . ./src/tests/*/*.out
           grep -r . ./src/tests/*/*.diff
+  ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Remove php7 tests for php8
+        run: rm -rf src/tests/*php7*/
+      - name: add ppa repo for php8
+        run: |
+          apt-get -y install software-properties-common
+          add-apt-repository -y ppa:ondrej/php
+          apt-get -y update
+      - name: install php8
+          apt-get -y install php-cli php-cgi php-dev php-xml php-pear
+      - name: Install pecl
+        continue-on-error: true
+        run: pecl install vld-beta
+      - name: Build and run the testsuite
+        continue-on-error: true
+        run: make tests
+      - name: Show logs in case of failure
+        if: ${{ failure() }}
+        continue-on-error: true
+        run: |
+          grep -r . ./src/tests/*/*.out
+          grep -r . ./src/tests/*/*.diff
