@@ -17,6 +17,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+      - name: Install current re2c
+        run: |
+          apt -qy remove re2c
+          apt -qy install wget
+          wget https://github.com/skvadrik/re2c/releases/download/2.2/re2c-2.2.tar.xz
+          tar Jxf re2c-2.2.tar.xz
+          cd re2c-2.2; ./configure && make && make install
+        working-directory: /tmp
       - name: Install pecl
         if: startsWith(matrix.container, 'php:7')
         run: pecl install vld-beta
