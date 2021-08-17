@@ -39,11 +39,11 @@ jobs:
         run: rm -rf src/tests/*php7*/
       - name: add ppa repo for php8
         run: |
-          apt-get -y install software-properties-common
-          add-apt-repository -y ppa:ondrej/php
-          apt-get -y update
+          sudo apt-get -y install software-properties-common
+          sudo add-apt-repository -y ppa:ondrej/php
+          sudo apt-get -y update
       - name: install php8
-        run: apt-get -y install php-cli php-cgi php-dev php-xml php-pear
+        run: sudo apt-get -y install php-cli php-cgi php-dev php-xml php-pear
       - name: Install pecl
         continue-on-error: true
         run: pecl install vld-beta
