@@ -43,7 +43,7 @@ jobs:
           add-apt-repository -y ppa:ondrej/php
           apt-get -y update
       - name: install php8
-          apt-get -y install php-cli php-cgi php-dev php-xml php-pear
+        run: apt-get -y install php-cli php-cgi php-dev php-xml php-pear
       - name: Install pecl
         continue-on-error: true
         run: pecl install vld-beta
