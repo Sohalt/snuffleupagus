@@ -2,7 +2,8 @@
   description = "Security module for php7 and php8";
 
   # Nixpkgs / NixOS version to use.
-  inputs.nixpkgs.url = "nixpkgs/nixos-21.05";
+  #inputs.nixpkgs.url = "nixpkgs/nixos-21.05";
+  inputs.nixpkgs.url = "nixpkgs";
 
   outputs = { self, nixpkgs }:
     let
@@ -34,7 +35,8 @@
           buildInputs = [ pcre2 ];
           internalDeps = [ php.extensions.session ];
 
-          #doCheck = true;
+          doCheck = false;
+          checkPhase = "make tests";
 
           src = ./src;
 
@@ -51,8 +53,13 @@
 
       # Provide some binary packages for selected system types.
       packages = forAllSystems (system:
+        let
+          pkgs = nixpkgsFor.${system};
+          snuffleupagus = pkgs.snuffleupagus;
+        in
         {
-          inherit (nixpkgsFor.${system}) snuffleupagus;
+          inherit snuffleupagus;
+          php = pkgs.php.withExtensions ({ enabled, ... }: enabled ++ [ snuffleupagus ]);
         });
 
       # The default package for 'nix build'. This makes sense if the
@@ -69,28 +76,33 @@
             inherit (self.packages.${system}) snuffleupagus;
 
             # Additional tests, if applicable.
-            test = stdenv.mkDerivation {
-              name = "snuffleupagus-test-${version}";
+            test =
+              let
+                php = php.withExtensions ({ enabled, all }: enabled ++ [ snuffleupagus ]);
+              in
+              stdenv.mkDerivation {
+                name = "snuffleupagus-test-${version}";
 
-              buildInputs = [ snuffleupagus ];
+                buildInputs = [ snuffleupagus ];
 
-              unpackPhase = "true";
+                unpackPhase = "true";
 
-              buildPhase = ''
-                echo 'running some integration tests'
-                [[ $(snuffleupagus) = 'Hello Nixers!' ]]
-              '';
+                buildPhase = ''
+                  echo 'running some integration tests'
+                  [[ $(snuffleupagus) = 'Hello Nixers!' ]]
+                '';
 
-              installPhase = "mkdir -p $out";
-            };
+                installPhase = "mkdir -p $out";
+              };
           }
 
           // lib.optionalAttrs stdenv.isLinux {
             # A VM test of the NixOS module.
             vmTest =
-              with import (nixpkgs + "/nixos/lib/testing-python.nix") {
-                inherit system;
-              };
+              with import (nixpkgs + "/nixos/lib/testing-python.nix")
+                {
+                  inherit system;
+                };
 
               makeTest {
                 nodes = {
